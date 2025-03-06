@@ -1,0 +1,23 @@
+#!/bin/sh
+
+# Simple script to quickly build another teams design
+# Run in team folder
+
+TEAM=$(basename $PWD)
+cd design/
+
+# enable venv
+python -m venv .venv --prompt ectf-$TEAM-attack
+. ./.venv/bin/activate
+
+python -m pip install tools/
+python -m pip install -e design/
+
+# make secrets
+mkdir secrets/
+python -m ectf25_design.gen_secrets secrets/global.secrets 1 2 3 4
+
+# build design
+cd decoder/
+docker build -t decoder-$TEAM .
+docker run --rm -v ./build_out:/out -v ./:/decoder -v ./../secrets/global.secrets:/global.secrets -e DECODER_ID=0xdeadbeef decoder-$TEAM

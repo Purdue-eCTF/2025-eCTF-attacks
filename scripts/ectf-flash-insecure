@@ -1,0 +1,7 @@
+#!/bin/sh
+
+cd design/
+
+. ./.venv/bin/activate
+
+python -m ectf25.utils.flash decoder/build_out/max78000.bin /dev/ttyACM0
