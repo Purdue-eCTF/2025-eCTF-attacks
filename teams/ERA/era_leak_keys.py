@@ -30,10 +30,18 @@ uint8_t SUB_KEY[] = { 0x61, 0x33, 0x62, 0x33, 0x62, 0x38, 0x34, 0x37, 0x65, 0x38
 #endif // SECRETS_H
 """
 
+from hashlib import sha256
+from Crypto.Util.Padding import pad
+from Crypto.Cipher import AES
+import base64
+import json
+import struct
+import argparse
 from pwn import *
 from decoder import DecoderIntf
 
 context.arch = 'arm'
+
 
 def conn():
     r = DecoderIntf('/dev/ttyACM0')
@@ -44,15 +52,12 @@ def conn():
 REAL_ENCODER_KEY = 'bb1d5f9dde42ab5261eb6c49ae17542c'
 REAL_ENCODER_SALT = '1fe6f644ab65f9bf'
 # not 100% on this
+REAL_CHANNEL3_KEY = '21c65d54f0fa9920bf3826c64ed18200'
 REAL_CHANNEL0_KEY = '21c65d54f0fa9920bf3826c64ed18200'
+REAL_CHANNEL1_KEY = '07b103609f6f8925c74dc3bc272d6762'
+REAL_CHANNEL2_KEY = '523439f58a50f9e9202e72e5e7251f68'
+REAL_CHANNEL4_KEY = '611d5eb80989f9267f81e0a0d836d301'
 
-import argparse
-import struct
-import json
-import base64
-from Crypto.Cipher import AES
-from Crypto.Util.Padding import pad
-from hashlib import sha256
 
 class Encoder:
     def __init__(self):
@@ -67,8 +72,14 @@ class Encoder:
         self.encoder_salt = REAL_ENCODER_SALT
 
     def get_channel_key(self, channel):
-        if channel == 0:
-            return REAL_CHANNEL0_KEY
+        if channel == 3:
+            return REAL_CHANNEL3_KEY
+        elif channel == 1:
+            return REAL_CHANNEL1_KEY
+        elif channel == 2:
+            return REAL_CHANNEL2_KEY
+        elif channel == 4:
+            return REAL_CHANNEL4_KEY
         else:
             return None
 
@@ -94,7 +105,7 @@ class Encoder:
         timestamp_bytes = struct.pack("<Q", timestamp)
         channel_bytes = struct.pack("<I", channel)
 
-        #size of the plain frame
+        # size of the plain frame
         frame_size = len(frame)
 
         # Generate the encryption key
@@ -102,7 +113,8 @@ class Encoder:
             print('dummy frame')
             key = '0' * 32
         else:
-            key = sha256(self.get_channel_key(channel).encode() + str(timestamp).encode() + self.encoder_salt.encode()).hexdigest()[:32]
+            key = sha256(self.get_channel_key(channel).encode(
+            ) + str(timestamp).encode() + self.encoder_salt.encode()).hexdigest()[:32]
 
         # encrypt the frame
         frame = pad(frame, 16)
@@ -110,31 +122,54 @@ class Encoder:
         in64 = base64.b64encode(cipher.encrypt(frame))
 
         # generate the integrity hash
-        data = channel_bytes + timestamp_bytes + base64.b64decode(in64) + self.encoder_salt.encode()
+        data = channel_bytes + timestamp_bytes + \
+            base64.b64decode(in64) + self.encoder_salt.encode()
         integrity_hash = sha256(data).hexdigest()
 
-
         # encrypting the whole payload
-        payload = pad(struct.pack("<IQ", channel, timestamp) + bytes.fromhex(integrity_hash) + base64.b64decode(in64), 16)
-        payload_cipher = AES.new(self.encoder_key.encode('utf-8'), AES.MODE_ECB)
+        payload = pad(struct.pack("<IQ", channel, timestamp) +
+                      bytes.fromhex(integrity_hash) + base64.b64decode(in64), 16)
+        payload_cipher = AES.new(
+            self.encoder_key.encode('utf-8'), AES.MODE_ECB)
         encrypted_payload = base64.b64encode(payload_cipher.encrypt(payload))
 
         # size of the plain payload
-        size = len(struct.pack("<IQ", channel, timestamp) + bytes.fromhex(integrity_hash) + base64.b64decode(in64))
+        size = len(struct.pack("<IQ", channel, timestamp) +
+                   bytes.fromhex(integrity_hash) + base64.b64decode(in64))
 
         # returning the encrypted payload + the size of the plain payload
         return struct.pack("<Q", int(size)) + struct.pack("<I", int(frame_size)) + base64.b64decode(encrypted_payload)
+
+    def decrypt(self, channel, timestamp, packet):
+        payload = packet[12:]
+        payload_cipher = AES.new(
+            self.encoder_key.encode('utf-8'), AES.MODE_ECB)
+        inner = payload_cipher.decrypt(payload)
+
+        # Generate the encryption key
+        if self.get_channel_key(channel) is None:
+            print('dummy frame')
+            key = '0' * 32
+        else:
+            key = sha256(self.get_channel_key(channel).encode(
+            ) + str(timestamp).encode() + self.encoder_salt.encode()).hexdigest()[:32]
+
+        print(inner[4:])
+        print(len(inner))
+        cipher = AES.new(key.encode('utf-8'), AES.MODE_ECB)
+        return cipher.decrypt(inner[12:-4])
 
 
 def altered_len(packet, length):
     return packet[0:8] + p32(length) + packet[12:]
 
+
 def leak(r, packet):
 
-    # packet = b"<\x00\x00\x00\x00\x00\x00\x00\x07\x00\x00\x00f\x9d\xe3\x97\x16\xab>\r\\\x89\x1f\xc1N\xef\x1dvdP\x152A\xbf'\xa2\x1d\x14\xd2\xe6\x9bQt]\xc0\n\xb6&\xb0 c\xef\xda(\x8b\xb6\xbd\x81\xe4\xe6H\xecf\x04\xc4\xb0\x97\xee\x8d\x8c\xad\x85\xc9\xa7\x1c<"
-    # packet_len = 7
+    # packet = bytes.fromhex("7c0000000000000040000000bef9c3648aa4eb91187dba00a7d7444eaf81c1fb2887b244960e8a3f0f61e67762554c8f4b1ace0c96fca51582e686a3a50ae6486e58695fd12484b2641193026abf7848e9d3c96dde5c9a4d719e5534c7837cf6a3e10ea0ee6e34c3b5dd0bf15c05f69177058b24d3168e0ffa9ff3ee082e120eadab8894f09716a7c60cc32f")
+    packet_len = 7
 
-    leak = r.decode(altered_len(packet, 0x700))
+    leak = r.decode(altered_len(packet, 0xa00))
     print(leak)
 
     channel_key_offset = 152
@@ -149,13 +184,100 @@ def leak(r, packet):
     print(f'{encoder_salt = }')
     print(f'{encoder_key = }')
 
+
+def decrypt_subscribe(payload, device_id, sub_key, decoders_salt):
+
+    print(payload)
+    inner = payload[8:]
+    payload_cipher = AES.new(sub_key.encode('utf-8'), AES.MODE_ECB)
+    inner_decrypt = payload_cipher.decrypt(inner)
+    print(inner_decrypt)
+
+    actual_inner = inner_decrypt[4:-12]
+
+    # deriving the key from hash
+    key = sha256(str(device_id).encode() +
+                 decoders_salt.encode()).hexdigest()[:32]
+
+    inner_cipher = AES.new(key.encode('utf-8'), AES.MODE_ECB)
+    inner_decrypt2 = inner_cipher.decrypt(actual_inner[48:])
+    print(inner_decrypt2.hex())
+    return inner_decrypt2
+
+
+def encrypt_subscribe(device_id, channel, start, end, sub_key, decoders_salt):
+
+    # deriving the key from hash
+    key = sha256(str(device_id).encode() +
+                 decoders_salt.encode()).hexdigest()[:32]
+
+    # prepare data to be encrypted
+    data = struct.pack("<IQQI", device_id, start, end, channel)
+
+    # encrypting
+    data = pad(data, 16)
+    cipher = AES.new(key.encode('utf-8'), AES.MODE_ECB)
+    in64 = base64.b64encode(cipher.encrypt(data))
+
+    # generate the integrity hash
+    raw = base64.b64decode(in64) + decoders_salt.encode()
+    integrity_hash = sha256(raw).hexdigest()
+
+    # preparing the paylpoad
+    payload = struct.pack("<I", device_id) + \
+        bytes.fromhex(integrity_hash) + base64.b64decode(in64)
+
+    # size of the plain payload
+    size = len(struct.pack("<I", device_id) +
+               bytes.fromhex(integrity_hash) + base64.b64decode(in64))
+
+    # encrypting the whole payload
+    payload = pad(payload, 16)
+    payload_cipher = AES.new(sub_key.encode('utf-8'), AES.MODE_ECB)
+    payload_in64 = base64.b64encode(payload_cipher.encrypt(payload))
+
+    # return the encrypted payload + the size of the plain payload
+    return struct.pack("<Q", int(size)) + base64.b64decode(payload_in64)
+
+
 def main():
     r = conn()
 
-    # leak(r)
+    # encoder = Encoder()
+    # test_frame = encoder.encode(2, b'pwned lmao', 1730269274556401)
+    # leak(r, test_frame)
+
+    # packet = bytes.fromhex("7c00000000000000400000006e619b6e4af0bf57ae2392f49715217f728ce09a9f8a1f745f5a238d5f7ee15a4acd04649180f4ca2b55df6bea0be1bf0d4add11d49f092bb29456534c42d78d6c4dd35d4d89b1bc6af6d003d45506a10ff2b7f5376198b673859b2a78118ebb951396ec7acbed89e4c8d52233d3a820c6376085d960ac60c8621c25acc6ac66")
+    # leak(r, packet)
+
+    # sub_bytes = open(
+    #     "/home/bronson/ectf/2025-eCTF-targets/era/own.sub", "rb").read()
+    # print(decrypt_subscribe(sub_bytes, 0xbc6a237d,
+    #                         "2a50af249881585e0484e59e4c888572", "726221bab39e3bf8"))
+    # forged_sub = encrypt_subscribe(0xbc6a237d, 4, 0, 0xffffffffffffffff,
+    #                                "2a50af249881585e0484e59e4c888572", "726221bab39e3bf8")
+    # sub_bytes = open(
+    #     "./forged.sub", "wb").write(forged_sub)
+
+    # encoder = Encoder()
+    # test_frame = encoder.encode(3, b'pwned lmao', 1844941151326521)
+    # leak(r, test_frame)
+
     encoder = Encoder()
-    test_frame = encoder.encode(0, b'pwned lmao', 200)
-    print(r.decode(test_frame))
+    test_frame = encoder.encode(1, b'pwned lmao', 1844939227176069)
+    test_frame = bytes.fromhex("7c0000000000000040000000eef586fea1ec7854bddbd33256d9dfa0d923f01cb16e6038fdea0ef2755c515be64694a5958356d4676580e80898d983f6dc3310256626f502836d5ee4227918f338eaeaba1db38fac5efed219f75d12686f0dada3dbe2e146ffabdfceca289a555913e5b9b258eee53638613fd95a7bcf1cf410cc9980ac25af2dbac787a891")
+    print(encoder.decrypt(1, 113991994971475, test_frame))
+    # print(r.decode(test_frame))
+
+    encoder = Encoder()
+    test_frame = bytes.fromhex("7c0000000000000040000000cc3cfc22f2936cbcc52543842c54a6b46358df496cdd156f468dad9e97af6981df8a892c6419a9303c9c70f1df2eb33fbc0543ef565190660b2326cc0410d655bc4ab7e8c17e46d632b428716491715d36b382da31e7cd65486f54191f35549bc4e45c8ee4b35392d7c9919c551fac48146072acb8213af0e73d5a5e81bd8fb1")
+    print(encoder.decrypt(2, 1844940785791404, test_frame))
+    # print(r.decode(test_frame))
+
+    encoder = Encoder()
+    test_frame = bytes.fromhex("7c00000000000000400000006e619b6e4af0bf57ae2392f49715217f728ce09a9f8a1f745f5a238d5f7ee15a4acd04649180f4ca2b55df6bea0be1bf0d4add11d49f092bb29456534c42d78d6c4dd35d4d89b1bc6af6d003d45506a10ff2b7f5376198b673859b2a78118ebb951396ec7acbed89e4c8d52233d3a820c6376085d960ac60c8621c25acc6ac66")
+    print(encoder.decrypt(4, 1844942911942120, test_frame))
+    # print(r.decode(test_frame))
 
     # c1_valid = encoder.encode(0, b'pwned lmao', 69)
     # print(altered_len(packet, 0x700).hex())
