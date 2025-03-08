@@ -15,7 +15,16 @@ from enum import IntEnum
 import struct
 from typing import Optional, Iterator
 
-from loguru import logger
+# from loguru import logger
+class DummyLogger:
+    def debug(self, message):
+        pass
+
+    def error(self, message):
+        pass
+
+logger = DummyLogger()
+
 from serial import Serial
 from serial.serialutil import SerialTimeoutException
 
