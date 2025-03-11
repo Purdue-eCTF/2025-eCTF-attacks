@@ -15,7 +15,20 @@ from enum import IntEnum
 import struct
 from typing import Optional, Iterator
 
-from loguru import logger
+# from loguru import logger
+class DummyLogger:
+    def debug(self, message):
+        pass
+
+    def error(self, message):
+        pass
+
+    def info(self, message):
+        print('info (prob key)')
+        print(message)
+
+logger = DummyLogger()
+
 from serial import Serial
 from serial.serialutil import SerialTimeoutException
 
@@ -149,9 +162,11 @@ class DecoderIntf:
         self.send_msg(msg)
 
         # receive response
-        resp = self.get_msg()
-        if resp != Message(Opcode.SUBSCRIBE, b""):
-            raise DecoderError(f"Bad subscribe response {resp}")
+        while True:
+            resp = self.get_msg()
+            print(resp)
+            # if resp != Message(Opcode.SUBSCRIBE, b""):
+            #     raise DecoderError(f"Bad subscribe response {resp}")
 
     def list(self) -> list[tuple[int, int, int]]:
         """List the subscribed channels of a Decoder
@@ -261,8 +276,8 @@ class DecoderIntf:
         """
         while True:
             msg = self.get_raw_msg()
-            if msg.opcode == Opcode.ERROR:
-                raise DecoderError(f"Decoder returned ERROR: {repr(msg.body)}")
+            # if msg.opcode == Opcode.ERROR:
+            #     raise DecoderError(f"Decoder returned ERROR: {repr(msg.body)}")
             if msg.opcode != Opcode.DEBUG:
                 return msg
             logger.info(f"Got DEBUG: {repr(msg.body)}")

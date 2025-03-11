@@ -37,11 +37,26 @@ def main():
     #         best_score = score
     #         best_pair = pair
 
+    for pair in pairs:
+        if u32(pair.plaintext[12:16]) == 0x10010705:
+            print(pair)
+            return
+
     search_addr = 0x20020000
     # search_addr = 0x1000e714
-    options = [(pair, hex(u32(pair.plaintext[12:16])), abs(search_addr - u32(pair.plaintext[12:16]))) for pair in pairs]
-    options.sort(key = lambda a: a[2])
-    print([o[1] for o in options[:10]])
+    # search_addr = 0
+    search_offset = 12
+    # options = [(pair, hex(u32(pair.plaintext[search_offset:search_offset + 4])), abs(search_addr - u32(pair.plaintext[search_offset:search_offset + 4]))) for pair in pairs]
+    options = [(pair, u32(pair.plaintext[search_offset:search_offset + 4])) for pair in pairs]
+    # options.sort(key = lambda a: a[2])
+    # print([o[1] for o in options[:10]])
+
+    options.sort(key = lambda a: a[1])
+    for option in options:
+        addr = option[1]
+        if addr >= 0x1000e000 and addr < 0x100193c0 and addr % 2 == 1:
+            print(hex(addr))
+            a = input('continue? ')
 
 if __name__ == '__main__':
     main()
