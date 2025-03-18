@@ -1,0 +1,3 @@
+#!/bin/sh
+
+ectf-shell python -m ectf25_attack.pull_frames $1
