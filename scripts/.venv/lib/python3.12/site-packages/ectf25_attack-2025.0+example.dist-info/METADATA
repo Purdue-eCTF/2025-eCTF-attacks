@@ -1,0 +1,4 @@
+Metadata-Version: 2.2
+Name: ectf25_attack
+Version: 2025.0+example
+Requires-Python: >=3.11
