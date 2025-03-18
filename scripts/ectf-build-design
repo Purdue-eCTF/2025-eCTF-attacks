@@ -3,7 +3,7 @@
 # Simple script to quickly build another teams design
 # Run in team folder
 
-TEAM=$(basename $PWD)
+TEAM=$(basename $PWD | tr '[:upper:]' '[:lower:]')
 cd design/
 
 # enable venv
