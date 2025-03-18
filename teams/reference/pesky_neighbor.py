@@ -33,7 +33,7 @@ def main():
     global frames
     with open("frames.json") as f:
         frames = json.load(f)
-    attacks = [per_channel_timestamp]
+    attacks = [equal_timestamps]
     for attack in attacks:
         logger.info(f"Running {attack.__name__}")
         try:
