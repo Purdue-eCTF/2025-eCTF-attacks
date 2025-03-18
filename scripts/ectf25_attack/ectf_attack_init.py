@@ -46,7 +46,7 @@ async def main():
     shutil.copyfile(team_folder / 'README.md', team_attack_folder / 'README.md')
     shutil.copyfile(team_folder / 'own.sub', team_attack_folder / 'c1_valid.sub')
     shutil.copyfile(team_folder / 'expired.sub', team_attack_folder / 'c2_expired.sub')
-    shutil.copyfile(team_folder / 'pirated.sub', team_attack_folder / 'c2_pirated.sub')
+    shutil.copyfile(team_folder / 'pirated.sub', team_attack_folder / 'c3_pirated.sub')
     shutil.copyfile(team_folder / 'ports.txt', team_attack_folder / 'ports.txt')
 
     write_file(team_attack_folder / 'frames.json', json.dumps(frames))

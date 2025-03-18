@@ -10,7 +10,6 @@ def main():
 
     c0_frames = filter_channel(frames, 1)
     frame1 = c0_frames[0]
-    print(frame1.data.hex())
     frame2 = c0_frames[1]
 
     timestamp = frame2.timestamp + 1
