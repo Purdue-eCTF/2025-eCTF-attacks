@@ -74,14 +74,20 @@ class Frame:
             'encoded': self.data.hex(),
         }
 
+    def with_data(self, data: bytes):
+        return Frame(channel = self.channel, timestamp = self.timestamp, data = data)
+
 def load_frames(file) -> List[Frame]:
     with open(file, 'r') as f:
-        data = f.read()
+        data = json.loads(f.read())
 
     return [Frame.from_json(entry) for entry in data]
 
 def save_frames(file, data: List[Frame]):
-    data_ser = [frame.to_json() for entry in data]
+    data_ser = [frame.to_json() for frame in data]
 
     with open(file, 'w') as f:
-        f.write(data_ser)
+        f.write(json.dumps(data_ser))
+
+def filter_channel(frames: List[Frame], channel: int) -> List[Frame]:
+    return [frame for frame in frames if frame.channel == channel]

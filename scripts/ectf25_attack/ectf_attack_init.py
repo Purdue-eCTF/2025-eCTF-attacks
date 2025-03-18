@@ -40,6 +40,7 @@ async def main():
     # copy templates scripts
     shutil.copyfile(template_folder() / 'decoder.py', team_attack_folder / 'decoder.py')
     shutil.copyfile(template_folder() / 'exploit_template.py', team_attack_folder / 'solve.py')
+    shutil.copyfile(template_folder() / 'gen_pesky.py', team_attack_folder / 'gen_pesky.py')
 
     # copy subscriptions and packets
     shutil.copyfile(team_folder / 'README.md', team_attack_folder / 'README.md')
