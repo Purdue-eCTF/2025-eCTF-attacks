@@ -7,7 +7,7 @@ import shutil
 import argparse
 import asyncio
 import json
-from .utils import TargetInfo
+from .utils import TargetInfo, attack_folder, template_folder
 
 def write_file(name, data):
     format = 'wb' if type(data) == bytes else 'w'
@@ -24,8 +24,6 @@ async def main():
 
     args = parser.parse_args()
 
-    attack_folder = Path(os.path.realpath(__file__)).parent.parent.parent.absolute()
-    template_folder = attack_folder / 'exploit_template'
     team_folder = Path(args.team_folder).absolute()
     team_name = team_folder.name
 
@@ -36,12 +34,12 @@ async def main():
     print('frame capture done')
 
     # make attack folder
-    team_attack_folder = (attack_folder / 'teams' / team_name)
+    team_attack_folder = (attack_folder() / 'teams' / team_name)
     team_attack_folder.mkdir(parents = True)
 
     # copy templates scripts
-    shutil.copyfile(template_folder / 'decoder.py', team_attack_folder / 'decoder.py')
-    shutil.copyfile(template_folder / 'exploit_template.py', team_attack_folder / 'solve.py')
+    shutil.copyfile(template_folder() / 'decoder.py', team_attack_folder / 'decoder.py')
+    shutil.copyfile(template_folder() / 'exploit_template.py', team_attack_folder / 'solve.py')
 
     # copy subscriptions and packets
     shutil.copyfile(team_folder / 'README.md', team_attack_folder / 'README.md')

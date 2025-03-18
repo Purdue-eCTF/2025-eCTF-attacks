@@ -2,7 +2,15 @@ import asyncio
 import json
 import time
 from dataclasses import dataclass
-from typing import Dict
+from typing import Dict, List
+from pathlib import Path
+import os
+
+def attack_folder():
+    return Path(os.path.realpath(__file__)).parent.parent.parent.absolute()
+
+def template_folder():
+    return attack_folder() / 'exploit_template'
 
 @dataclass
 class TargetInfo:
@@ -48,3 +56,32 @@ class TargetInfo:
             output.extend(frame_group)
 
         return output
+
+@dataclass
+class Frame:
+    channel: int
+    timestamp: int
+    data: bytes
+
+    @classmethod
+    def from_json(cls, data):
+        return Frame(data['channel'], data['timestamp'], bytes.fromhex(data['encoded']))
+
+    def to_json(self):
+        return {
+            'channel': self.channel,
+            'timestamp': self.timestamp,
+            'encoded': self.data.hex(),
+        }
+
+def load_frames(file) -> List[Frame]:
+    with open(file, 'r') as f:
+        data = f.read()
+
+    return [Frame.from_json(entry) for entry in data]
+
+def save_frames(file, data: List[Frame]):
+    data_ser = [frame.to_json() for entry in data]
+
+    with open(file, 'w') as f:
+        f.write(data_ser)
