@@ -3,7 +3,7 @@ import json
 import sys
 import traceback
 
-from ectf25.utils.decoder import DecoderIntf
+from decoder import DecoderIntf
 from loguru import logger
 
 

@@ -36,7 +36,7 @@ def main():
     with open("pesky_frames.json") as f:
         frames = json.load(f)
     # attacks = [equal_timestamps, per_channel_timestamp]
-    attacks = [playback]
+    attakcs = [playback]
     for attack in attacks:
         logger.info(f"Running {attack.__name__}")
         try:
