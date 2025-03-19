@@ -12,7 +12,7 @@ def main():
     # Uncomment relavant attack, or write one from scratch
     # output = []
     # output = repeated_frame(frames)
-    # output = per_channel_check(frames)
+    output = per_channel_check(frames)
 
     save_frames('pesky_frames.json', output)
 

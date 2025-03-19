@@ -91,3 +91,16 @@ def save_frames(file, data: List[Frame]):
 
 def filter_channel(frames: List[Frame], channel: int) -> List[Frame]:
     return [frame for frame in frames if frame.channel == channel]
+
+# Attack for teams which allow multiple frames of the same timestamp
+def repeated_frame(frames: List[Frame]) -> List[Frame]:
+    return [frames[0], frames[0]]
+
+# Attack for teams with a per channel timestamp check
+def per_channel_check(frames: List[Frame]) -> List[Frame]:
+    start_frame = filter_channel(frames, 0)[0]
+    end_frame = filter_channel(frames, 1)[-1]
+
+    assert end_frame.timestamp >= start_frame.timestamp
+
+    return [end_frame, start_frame]
