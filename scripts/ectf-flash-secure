@@ -1,7 +1,0 @@
-#!/bin/sh
-
-cd design/
-
-. ./.venv/bin/activate
-
-python -m ectf25.utils.flash ../attacker.prot /dev/ttyACM0

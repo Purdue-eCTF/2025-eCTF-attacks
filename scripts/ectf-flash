@@ -1,0 +1,13 @@
+#!/bin/sh
+
+# $1 is input file to flash
+# $2 is port to flash to
+
+if [ -z $2 ]
+then
+  PORT="/dev/ttyACM0"
+else
+  PORT=$2
+fi
+
+ectf-shell python -m ectf25.utils.flash $1 $PORT

@@ -14,6 +14,37 @@ def write_file(name, data):
     with open(name, format) as f:
         f.write(data)
 
+# parses decoder ids from the attack readme
+def parse_readme(readme_file):
+    def parse_id_from_section(section):
+        for line in section.split('\n'):
+            if 'decoder id' in line.lower():
+                return int(line.split(':')[1].strip(), 0)
+
+        return None
+
+    parsed_ids = {}
+
+    for part in readme_file.strip().split('## ')[1:]:
+        name = part.split(' ')[0].strip().lower()
+        id = parse_id_from_section(part)
+
+        parsed_ids[f'{name}_id'] = id
+
+    for expected_name in ['attacker_id', 'pirated_id', 'neighbor_id']:
+        if expected_name not in parsed_ids:
+            print(f'Warning: no decoder id found for {expected_name} decoder')
+            parsed_ids[expected_name] = None
+
+    return parsed_ids
+
+def copy_and_format(src_file, dst_file, **kwargs):
+    with open(src_file, 'r') as f:
+        data = f.read()
+
+    with open(dst_file, 'w') as f:
+        f.write(data.format(**kwargs))
+
 async def main():
     parser = argparse.ArgumentParser(
         prog = 'eCTF Initialize Attack folder',
@@ -27,6 +58,10 @@ async def main():
     team_folder = Path(args.team_folder).absolute()
     team_name = team_folder.name
 
+    # parse decoder ids from readme
+    with open(team_folder / 'README.md') as f:
+        decoder_ids = parse_readme(f.read())
+
     # capture frames
     target = TargetInfo.load(team_folder / 'ports.txt')
     print('starting frame capture...')
@@ -39,8 +74,8 @@ async def main():
 
     # copy templates scripts
     shutil.copyfile(template_folder() / 'decoder.py', team_attack_folder / 'decoder.py')
-    shutil.copyfile(template_folder() / 'exploit_template.py', team_attack_folder / 'solve.py')
-    shutil.copyfile(template_folder() / 'gen_pesky.py', team_attack_folder / 'gen_pesky.py')
+    copy_and_format(template_folder() / 'gen_pesky.py', team_attack_folder / 'gen_pesky.py', **decoder_ids)
+    copy_and_format(template_folder() / 'exploit_template.py', team_attack_folder / 'solve.py', **decoder_ids)
 
     # copy subscriptions and packets
     shutil.copyfile(team_folder / 'README.md', team_attack_folder / 'README.md')
