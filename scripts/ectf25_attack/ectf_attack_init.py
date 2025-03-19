@@ -7,7 +7,7 @@ import shutil
 import argparse
 import asyncio
 import json
-from .utils import TargetInfo, attack_folder, template_folder
+from .utils import TargetInfo, attack_folder, template_folder, load_playback_frames, save_frames
 
 def write_file(name, data):
     format = 'wb' if type(data) == bytes else 'w'
@@ -49,7 +49,12 @@ async def main():
     shutil.copyfile(team_folder / 'pirated.sub', team_attack_folder / 'c3_pirated.sub')
     shutil.copyfile(team_folder / 'ports.txt', team_attack_folder / 'ports.txt')
 
+    # save captured frames from remote
     write_file(team_attack_folder / 'frames.json', json.dumps(frames))
+
+    # save just first 16 playback frames to save space in git repo
+    playback_frames = load_playback_frames(team_folder / 'recording.json')
+    save_frames(team_attack_folder / 'playback_frames.json', playback_frames[:16])
 
 if __name__ == '__main__':
     asyncio.run(main())

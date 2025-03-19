@@ -18,9 +18,6 @@ def read_if_exists(name):
     except:
         return None
 
-def xor(a, b):
-    return bytes(m ^ n for m, n in zip(a, b))
-
 def main():
     r = conn()
 
@@ -28,22 +25,18 @@ def main():
     c2_expired = read_if_exists('c2_expired.sub')
     c3_pirated = read_if_exists('c3_pirated.sub')
     frames = load_frames('frames.json')
-    playback_frames = load_frames('playback_frames.json')
 
-    # emergency
-    c0_frames = filter_channel(frames, 0)
-    # valid, with recorded frames
-    c1_frames = filter_channel(frames, 1)
-    # eexpired frames
-    c2_frames = filter_channel(frames, 2)
-    # pirated frames
     c3_frames = filter_channel(frames, 3)
-    # no subscription frames
-    c4_frames = filter_channel(frames, 4)
+    # frame = c0_frames[0].data
 
-    print(r.list())
-    b = r.subscribe(b'example')
-    a = r.decode(b'example')
+    r.subscribe(c3_pirated)
+    print(r.decode(c3_frames[0].data))
+
+    # print(r.decode(frame + b'\0' * 64))
+
+    # print(r.list())
+    # b = r.subscribe(b'example')
+    # a = r.decode(b'example')
 
 
 

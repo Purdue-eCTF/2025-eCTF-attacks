@@ -67,6 +67,10 @@ class Frame:
     def from_json(cls, data):
         return Frame(data['channel'], data['timestamp'], bytes.fromhex(data['encoded']))
 
+    @classmethod
+    def from_playback_json(cls, data):
+        return Frame(1, data['timestamp'], bytes.fromhex(data['encoded']))
+
     def to_json(self):
         return {
             'channel': self.channel,
@@ -82,6 +86,12 @@ def load_frames(file) -> List[Frame]:
         data = json.loads(f.read())
 
     return [Frame.from_json(entry) for entry in data]
+
+def load_playback_frames(file) -> List[Frame]:
+    with open(file, 'r') as f:
+        data = json.loads(f.read())
+
+    return [Frame.from_playback_json(entry) for entry in data]
 
 def save_frames(file, data: List[Frame]):
     data_ser = [frame.to_json() for frame in data]

@@ -71,7 +71,11 @@ def main():
 
     end = prev_block + ct_block + padding_prev + ct_block + b'\0' * 32
     pwn_data = frame_data + end
-    print(r.decode(frame_data + record + padding_prev + ct_block) + b'\0' * 32)
+    fake_frame = (frame_data + record_iv + record_block + padding_prev + ct_block) + b'\0' * 32
+    # print(len(frame_data))
+    # print(len(fake_frame))
+    assert len(fake_frame) <= 256
+    r.decode(fake_frame)
 
     # frame_data = frame_data + last2_block + b'\0' * 32
 
