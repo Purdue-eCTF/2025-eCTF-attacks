@@ -7,12 +7,7 @@ import shutil
 import argparse
 import asyncio
 import json
-from .utils import TargetInfo, attack_folder, template_folder
-
-def write_file(name, data):
-    format = 'wb' if type(data) == bytes else 'w'
-    with open(name, format) as f:
-        f.write(data)
+from .utils import TargetInfo, attack_folder, template_folder, write_file
 
 async def main():
     parser = argparse.ArgumentParser(

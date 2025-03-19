@@ -7,12 +7,7 @@ import shutil
 import argparse
 import asyncio
 import json
-from .utils import TargetInfo, attack_folder, template_folder, load_playback_frames, save_frames
-
-def write_file(name, data):
-    format = 'wb' if type(data) == bytes else 'w'
-    with open(name, format) as f:
-        f.write(data)
+from .utils import TargetInfo, attack_folder, template_folder, load_playback_frames, save_frames, write_file
 
 # parses decoder ids from the attack readme
 def parse_readme(readme_file):

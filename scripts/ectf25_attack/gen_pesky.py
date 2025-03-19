@@ -10,12 +10,7 @@ import json
 from .utils import TargetInfo, attack_folder, template_folder
 from zipfile import ZipFile
 
-def write_file(name, data):
-    format = 'wb' if type(data) == bytes else 'w'
-    with open(name, format) as f:
-        f.write(data)
-
-async def main():
+def main():
     parser = argparse.ArgumentParser(
         prog = 'eCTF Initialize Attack folder',
         description = 'Initalizes files for attacking a team',
@@ -35,4 +30,4 @@ async def main():
         output.write(pesky_script, arcname = 'pesky_neighbor.py')
 
 if __name__ == '__main__':
-    asyncio.run(main())
+    main()

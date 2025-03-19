@@ -114,3 +114,8 @@ def per_channel_check(frames: List[Frame]) -> List[Frame]:
     assert end_frame.timestamp >= start_frame.timestamp
 
     return [end_frame, start_frame]
+
+def write_file(name, data):
+    format = 'wb' if type(data) == bytes else 'w'
+    with open(name, format) as f:
+        f.write(data)
