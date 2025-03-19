@@ -1,19 +1,27 @@
 #!/usr/bin/env python3
 from ectf25.utils.decoder import DecoderIntf
 # from Crypto.Cipher import AES
+# import struct
 import sys
 
-# key = bytes([0x24, 0xf6, 0x75, 0x43, 0x64, 0xb9, 0x54, 0xcf, 0xb3, 0x36, 0x71, 0xc8, 0x31, 0xda, 0x58,
-#              0x2e, 0xdb, 0x88, 0xb9, 0x42, 0x44, 0x23, 0x57, 0xd9, 0xc9, 0x5a, 0xe9, 0x4e, 0x9f, 0x8f, 0xe2, 0x0d])
-
-# iv = bytes([0xc6, 0xd3, 0x0c, 0x12, 0x4f, 0xbe, 0x47, 0xe8,
-#             0x6a, 0x02, 0xfc, 0x2a, 0x64, 0xb2, 0x30, 0xbf])
 
 # def gen_packet():
-#     cipher = AES.new(key=key, iv=iv, mode=AES.MODE_CBC)
-#     pkt = b'\x01\x00\x00\x00\x00\x00\x00\x00\x1a\xeb\x1f\x91\x03\xb9\x06\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00pwnedgonthischan^ flag ^0006b903911feb1a^ time ^c43d8e7452de706e'
+#     key = b's;\x85\x1c\x03\x82\xd9\xf2,X\x8a-\x0eS++'
+#     cipher = AES.new(key=key, mode=AES.MODE_ECB)
+#     pkt = b"this is a random frame that shouldn't have been send ".ljust(
+#         64, b"a")
 #     frame = cipher.encrypt(pkt)
-#     print(frame)
+#     frame_size = len(frame)
+#     header = struct.pack("<IQI", 0, 123, frame_size)
+
+#     full_packet = header + frame
+
+#     # Pad the full packet to a multiple of 16 bytes
+#     if len(full_packet) % 16 != 0:
+#         padding_length = 16 - (len(full_packet) % 16)
+#         full_packet += b"\x80" + b"\x00" * (padding_length - 1)
+
+#     print(cipher.encrypt(full_packet).hex())
 
 
 def conn():
@@ -23,10 +31,11 @@ def conn():
 
 def main():
     r = conn()
-    frame = {"channel": 1, "timestamp": 2032177352474409,
-             "encoded": "8ca92f03fb85531a9f7961279837f829f812acb499eb8a67e9e9c37dce86d0f1253d4fdd54e07e68757fe26638e80547475754fe19c66b51754e2e450757df7fe3bd9389e751c7bf470779fc49e5460d"}
+    frame = {"channel": 0, "timestamp": 123,
+             "encoded": "a937ae195388f24cddcea2ec67aa2d9ee8691d3344f9167e899f40273b18fb65058c27e57c609a01f4c4c8ef37b4f82d019770cbfaf695edce8c13b82cbddf8b73115e096567de1e412f0c0da43bd95e"}
     print(r.decode(bytes.fromhex(frame["encoded"])))
 
 
 if __name__ == "__main__":
+    # gen_packet()
     main()
