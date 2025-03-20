@@ -7,7 +7,8 @@ import shutil
 import argparse
 import asyncio
 import json
-from .utils import TargetInfo, attack_folder, template_folder, load_playback_frames, save_frames, write_file
+from .utils import TargetInfo, attack_folder, template_folder, load_playback_frames, save_frames, write_file, Frame, default_pesky
+from .gen_pesky import gen_pesky
 
 # parses decoder ids from the attack readme
 def parse_readme(readme_file):
@@ -63,6 +64,9 @@ async def main():
     frames = await target.capture_all_channels()
     print('frame capture done')
 
+    # create default pesky frames
+    pesky_frames = default_pesky([Frame.from_json(frame_data) for frame_data in frames])
+
     # make attack folder
     team_attack_folder = (attack_folder() / 'teams' / team_name)
     team_attack_folder.mkdir(parents = True)
@@ -81,10 +85,14 @@ async def main():
 
     # save captured frames from remote
     write_file(team_attack_folder / 'frames.json', json.dumps(frames))
+    save_frames(team_attack_folder / 'pesky_frames.json', pesky_frames)
+    gen_pesky(team_attack_folder)
 
     # save just first 16 playback frames to save space in git repo
     playback_frames = load_playback_frames(team_folder / 'recording.json')
     save_frames(team_attack_folder / 'playback_frames.json', playback_frames[:16])
+
+    print(f'created attack folder: {team_attack_folder}')
 
 if __name__ == '__main__':
     asyncio.run(main())

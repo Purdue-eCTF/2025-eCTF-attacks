@@ -115,6 +115,15 @@ def per_channel_check(frames: List[Frame]) -> List[Frame]:
 
     return [end_frame, start_frame]
 
+# executes both per_channel_check and repeated_frame attack
+def default_pesky(frames: List[Frame]) -> List[Frame]:
+    c0_frames = filter_channel(frames, 0)
+    c1_frames = filter_channel(frames, 1)
+
+    assert c1_frames[-1].timestamp >= c0_frames[0].timestamp
+
+    return [c1_frames[0], c1_frames[0], c1_frames[-1], c0_frames[0]]
+
 def write_file(name, data):
     format = 'wb' if type(data) == bytes else 'w'
     with open(name, format) as f:
