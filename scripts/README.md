@@ -1,7 +1,11 @@
 # scripts
 
-Set of scripts for easily building and flashing insecure design,
-because building teams design is a lot of commands.
+Set of scripts to help speed up attack process.
+Used for generating template attack scripts, and the pesky neighbor attacks.
+Also provides utilities for easily building designs and flashing images to a decoder.
 
-Just go in team folder (one with attack payload and subscriptions),
-and run the scripts.
+## Setup
+
+First run `./setup-python-venv.sh` to setup python virtual environment with correct packages
+
+Then add this directory to your path to use ectf tools easily from anywhere.
