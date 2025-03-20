@@ -58,7 +58,6 @@ def main():
         sub = p32(4) + b'\0' * 16 + data
         try:
             r.subscribe(sub)
-            sys.exit()
             return True
         except DecoderError as e:
             out = 'Cryptographic failure.' not in repr(e)
