@@ -1,0 +1,2 @@
+if mode == 2, 5, or 6 insta cooked (cbc, ctr, and gcm call function pointer which will almost certainly crash)
+if mode == 1 and block size == 16 cooked (ecb mode, wil also call function pointer for almost certain crash)
