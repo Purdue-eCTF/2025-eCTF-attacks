@@ -4,6 +4,7 @@ from pwn import *
 from decoder import DecoderIntf
 from ectf25_attack.utils import load_frames, Frame, filter_channel
 from dataclasses import dataclass
+import json
 
 context.arch = 'thumb'
 
@@ -96,11 +97,13 @@ def main():
         # ?    || 0    || opt1 ^ oct2
         # ?    || ?    || dec(opt1 ^ oct2)
 
-        result = decrypt_bodyu(message)
+        result = decrypt_body(message)
         return Pair(ct = xor(outer1.pt, outer2.ct), pt = result[32:48])
 
     # suscribe to channel 1 (use channel 1 header frames since there are more of them to capture)
     r.subscribe(c1_valid)
+
+    print(r.list())
 
     # find a known outer plaintext
     # these are channel 1 time values
@@ -147,8 +150,10 @@ def main():
 
     print(known_outer)
     print(known_inner)
+    print(json.dumps([{"ct": pair.ct.hex(), "pt": pair.pt.hex()} for pair in known_outer]))
+    print(json.dumps([{"ct": pair.ct.hex(), "pt": pair.pt.hex()} for pair in known_inner]))
     print('sub last part')
-    print(c1_valid[32:48])
+    print(c2_expired[32:48])
 
 
 

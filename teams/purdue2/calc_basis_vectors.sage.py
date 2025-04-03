@@ -5,6 +5,7 @@ from sage.all_cmdline import *   # import sage library
 
 _sage_const_2 = Integer(2); _sage_const_16 = Integer(16); _sage_const_7 = Integer(7); _sage_const_1 = Integer(1); _sage_const_0 = Integer(0); _sage_const_128 = Integer(128)
 from dataclasses import dataclass
+import json
 
 # Represents a plaintext ciphertext pair
 @dataclass
@@ -32,7 +33,7 @@ def to_vector(input):
 def xor(a, b):
     return bytes(m ^ n for m, n in zip(a, b))
 
-sub_last_block_ct = b'JN<\xee\xfa\xf5\x80\xc5\xf1\xe3d\x0b0v\xc5\xc9'
+sub_last_block_ct = b'c\x9c\x11\x85\x8b(~yJ=\xf3\xb0\x0f\x0b\xfd9'
 
 last_block_vector = to_vector(sub_last_block_ct)
 print(last_block_vector)
@@ -76,4 +77,7 @@ for i, bit in enumerate(sol):
 
 assert test_out == sub_last_block_ct
 print(sol_pairs)
+
+json_data = json.dumps([{"ct": pair.ct.hex(), "pt": pair.pt.hex()} for pair in sol_pairs])
+print(json_data)
 
