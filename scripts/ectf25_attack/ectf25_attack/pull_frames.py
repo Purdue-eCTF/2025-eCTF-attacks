@@ -15,6 +15,7 @@ async def main():
         description = 'Initalizes files for attacking a team',
     )
 
+    parser.add_argument('--capture-seconds', help = 'Amount of time to capture packets for', type = int, default = 10)
     parser.add_argument('team_folder', help = 'Attack info folder released by eCTF organizers')
 
     args = parser.parse_args()
@@ -24,7 +25,7 @@ async def main():
 
     # load old frames if they exists
     try:
-        with open(frames, 'r') as f:
+        with open(frames_file, 'r') as f:
             frames = json.loads(f.read())
     except:
         frames = []
@@ -33,7 +34,7 @@ async def main():
     target = TargetInfo.load(team_folder / 'ports.txt')
 
     print('starting frame capture...')
-    frames.extend(await target.capture_all_channels())
+    frames.extend(await target.capture_all_channels(seconds = args.capture_seconds))
     print('frame capture done')
 
     write_file(frames_file, json.dumps(frames))

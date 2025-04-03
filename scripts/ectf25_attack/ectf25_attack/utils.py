@@ -29,7 +29,7 @@ class TargetInfo:
 
         return cls(ip, channel_ports)
 
-    async def capture(self, channel: int):
+    async def capture(self, channel: int, seconds = 10):
         ip = self.host
         port = self.port_for_channel(channel)
 
@@ -37,7 +37,7 @@ class TargetInfo:
         buffer = b""
         frames = []
         start = time.time()
-        while time.time() - start < 10 or len(frames) < 2:
+        while time.time() - start < seconds or len(frames) < 2:
             buffer += await reader.read(1024)
             *lines, rest = buffer.split(b"\n")
             frames.extend(
@@ -46,10 +46,10 @@ class TargetInfo:
             buffer = rest
         return frames
 
-    async def capture_all_channels(self):
+    async def capture_all_channels(self, seconds = 10):
         output = []
         frames = await asyncio.gather(*[
-            self.capture(channel) for channel in self.channel_ports.keys()
+            self.capture(channel, seconds) for channel in self.channel_ports.keys()
         ])
 
         for frame_group in frames:
