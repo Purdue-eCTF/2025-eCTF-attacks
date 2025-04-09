@@ -47,6 +47,8 @@ async def main():
         description = 'Initalizes files for attacking a team',
     )
 
+    parser.add_argument('--host', help = 'IP Address of satellite', default = '54.86.219.63')
+    parser.add_argument('--port', help = 'Port of satellite', type = int)
     parser.add_argument('team_folder', help = 'Attack info folder released by eCTF organizers')
 
     args = parser.parse_args()
@@ -58,8 +60,12 @@ async def main():
     with open(team_folder / 'README.md') as f:
         decoder_ids = parse_readme(f.read())
 
+    if args.port is not None:
+        target = TargetInfo.from_ip_and_port(args.host, args.port)
+    else:
+        target = TargetInfo.load(team_folder / 'ports.txt')
+
     # capture frames
-    target = TargetInfo.load(team_folder / 'ports.txt')
     print('starting frame capture...')
     frames = await target.capture_all_channels()
     print('frame capture done')
@@ -81,7 +87,7 @@ async def main():
     shutil.copyfile(team_folder / 'own.sub', team_attack_folder / 'c1_valid.sub')
     shutil.copyfile(team_folder / 'expired.sub', team_attack_folder / 'c2_expired.sub')
     shutil.copyfile(team_folder / 'pirated.sub', team_attack_folder / 'c3_pirated.sub')
-    shutil.copyfile(team_folder / 'ports.txt', team_attack_folder / 'ports.txt')
+    target.write_ports_file(team_attack_folder / 'ports.txt')
 
     # save captured frames from remote
     write_file(team_attack_folder / 'frames.json', json.dumps(frames))

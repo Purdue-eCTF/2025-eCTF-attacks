@@ -100,21 +100,28 @@ def main():
         result = decrypt_body(message)
         return Pair(ct = xor(outer1.pt, outer2.ct), pt = result[32:48])
 
-    # suscribe to channel 1 (use channel 1 header frames since there are more of them to capture)
-    r.subscribe(c1_valid)
+    try:
+        with open('outer_pairs.json', 'r') as f:
+            data = json.loads(f.read())
+            known_outer = [Pair(pt = bytes.fromhex(elem["pt"]), ct = bytes.fromhex(elem["ct"])) for elem in data]
+    except Exception as e:
+        print(e)
 
-    print(r.list())
+        # suscribe to channel 1 (use channel 1 header frames since there are more of them to capture)
+        r.subscribe(c1_valid)
 
-    # find a known outer plaintext
-    # these are channel 1 time values
-    sub_start = 1551157932102814
-    sub_end = 1607133144206408
+        print(r.list())
 
-    time_pt = p64(sub_end) + p64(sub_start)
-    block_pt = xor(c1_valid[:16], time_pt)
-    block_ct = c1_valid[16:32]
+        # find a known outer plaintext
+        # these are channel 1 time values
+        sub_start = 1551157932102814
+        sub_end = 1607133144206408
 
-    known_outer = [Pair(pt = block_pt, ct = block_ct)]
+        time_pt = p64(sub_end) + p64(sub_start)
+        block_pt = xor(c1_valid[:16], time_pt)
+        block_ct = c1_valid[16:32]
+
+        known_outer = [Pair(pt = block_pt, ct = block_ct)]
 
     # find an initial known inner pladintext
     # use other sub so there is no relation which causes issues when generating other known outer pairs
@@ -141,19 +148,24 @@ def main():
 
 
     # generate a lot of known outer plaintexts ciphertext pairs
-    for _ in range(512):
+    for _ in range(len(frame_headers) - frame_counter):
         last_outer_pair = known_outer[-1]
 
         # obtains dec(inner.ct ^ outer.pt)
         # new plaintext in next iteration will have gone through aes, so we can make a chain of random pairs
         known_outer.append(oracle1(last_outer_pair, known_inner[0]))
 
+    check_no_dups(known_outer)
     print(known_outer)
     print(known_inner)
-    print(json.dumps([{"ct": pair.ct.hex(), "pt": pair.pt.hex()} for pair in known_outer]))
+    known_json = json.dumps([{"ct": pair.ct.hex(), "pt": pair.pt.hex()} for pair in known_outer])
+    with open('outer_pairs.json', 'w') as f:
+        f.write(known_json)
     print(json.dumps([{"ct": pair.ct.hex(), "pt": pair.pt.hex()} for pair in known_inner]))
     print('sub last part')
     print(c2_expired[32:48])
+    print('known pairs count')
+    print(len(known_outer))
 
 
 

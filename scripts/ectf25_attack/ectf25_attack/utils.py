@@ -29,6 +29,18 @@ class TargetInfo:
 
         return cls(ip, channel_ports)
 
+    @classmethod
+    def from_ip_and_port(cls, ip, port):
+        channel_ports = {channel: port + channel for channel in range(5)}
+        return cls(ip, channel_ports)
+
+    def to_ports_string(self):
+        ports_str = ' '.join([str(port) for _, port in sorted(self.channel_ports.items(), key = lambda a: a[1])])
+        return f'{self.host} {ports_str}'
+
+    def write_ports_file(self, file):
+        write_file(file, self.to_ports_string())
+
     async def capture(self, channel: int, seconds = 10):
         ip = self.host
         port = self.port_for_channel(channel)
